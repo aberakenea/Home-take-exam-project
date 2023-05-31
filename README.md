@@ -1,17 +1,236 @@
 # Home-take-exam-project
 #### Question 1: How many species are there in the current miRBase release?
-#ANSWERS:
-# Total number of species: 271
+# ANSWERS:
+## the code for the current miRBase release and it` path_file is:
+import re
+from collections import Counter
+import matplotlib.pyplot as plt
+
+file_path = r"C:\Users\wku\Advancedprogram\project\GC_calc-complexity-project\mature.fa"
+
+species_codes = []
+
+with open(file_path, 'r') as file:
+    for line in file:
+        match = re.match(r'^>(\w+)', line)
+        if match:
+            species_codes.append(match.group(1))
+
+species_counts = Counter(species_codes)
+total_species = len(species_counts)
+print("Total number of species:", total_species)
+
+# Filter species with frequencies greater than or equal to 220
+min_frequency = 220
+filtered_species_counts = {species: count for species, count in species_counts.items() if count >= min_frequency}
+
+# Sort filtered species based on microRNA counts in ascending order
+sorted_species_counts = sorted(filtered_species_counts.items(), key=lambda x: x[1])
+
+# Extract species and their counts from sorted list
+species = [item[0] for item in sorted_species_counts]
+counts = [item[1] for item in sorted_species_counts]
+
+# Plotting the bar chart
+plt.figure(figsize=(10, 6))  # Set the figure size
+plt.bar(species, counts)  # Create the bar plot
+plt.xlabel('Species')  # Set the x-axis label
+plt.ylabel('Count')  # Set the y-axis label
+plt.title('Number of miRNA per Species (Lowest to Highest)')  # Set the plot title
+plt.xticks(rotation=90)  # Rotate x-axis labels for better visibility
+plt.tight_layout()  # Adjust the layout for better spacing
+plt.show()  # Display the plot
+
+# the possible out put number of species in the current miRBase release are:
+### Total number of species: 271
 #### Task: generate an ordered plot (i.e. from lowest to highest) of number of miRNAs / species
 #![Figure_1](https://github.com/aberakenea/Home-take-exam-project/assets/130226484/62702380-cb84-4908-adf6-bcfd95016ee4)
+
 #### Question 2: how many **let-7** miRNAs are there in the current release of miRBase
-#ANSWER:
-## Total number of let-7 miRNAs across all species: 740
+# ANSWERs:
+## the code for let-7 miRNA in the current release of miRBase and it`s path_file is as following:
+'''
+Created on May 15, 2023
+
+@author: ABERA KENEA
+'''
+file_path = r"C:\Users\wku\Advancedprogram\project\GC_calc-complexity-project\mature.fa"
+
+def count_let7_miRNAs(file_path):
+    let7_count = 0
+   
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+       
+        for line in lines:
+            if line.startswith(">"):
+                miRNA_name = line.strip()[1:]
+               
+                if "let-7" in miRNA_name:
+                    let7_count += 1
+   
+    return let7_count
+
+let7_count = count_let7_miRNAs(file_path)
+print("Total number of let-7 miRNAs across all species:", let7_count)
+##  it`s out put is Total number of let-7 miRNAs across all species: 740
+
 #### Question 3: what is the current version of miRBase?
-### ANSWER:
-## Current version of miRBase: 22.1
+### ANSWERS:
+## code for the current version of miRBase and it`s path_file is:
+'''
+Created on May 20, 2023
+
+@author: ABERA KENEA
+'''
+import requests
+
+import re
+
+
+
+def get_mirbase_version():
+
+    try:
+
+        url = "https://www.mirbase.org/ftp/CURRENT/README"
+
+        response = requests.get(url)
+
+        response.raise_for_status()  # Raise an exception for HTTP errors
+
+        readme_text = response.text
+
+        # Search for the version information in the README file
+
+        version_match = re.search(r"Release (\d+\.\d+)", readme_text)
+
+        if version_match:
+
+            miRBase_version = version_match.group(1)
+
+            return miRBase_version
+
+    except requests.RequestException as e:
+
+        print("An error occurred while making the request:", e)
+
+    except re.error:
+
+        print("An error occurred while searching for the version information.")
+
+    
+
+    return None
+# Call the function to retrieve the miRBase version
+
+mirbase_version = get_mirbase_version()
+
+
+
+if mirbase_version:
+
+    print("Current version of miRBase:", mirbase_version)
+
+else:
+
+    print("Unable to retrieve the current version of miRBase.")
+
+## the possible out put is:
+# Current version of miRBase: 22.1
 #### Task: generate a plot to show which let miRNAs are present in each species.
 ## ANSWER:
+## the code to generate a plot to show which let miRNAs are present in each species is the following: 
+'''
+Created on May 28, 2023
+
+@author: ABERA KENEA
+'''
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+
+def extract_let7_code(header):
+    if 'let-7' in header:
+        code = header.split('let-7')[1].split()[0]
+        return f"let-7{code[0]}"
+    return ""
+
+def extract_species_code(header):
+    start_index = header.find('>') + 1
+    end_index = header.find('-', start_index)
+    if start_index < end_index:
+        return header[start_index:end_index]
+    return ""
+
+def let7_family_presence(file_path):
+    if not os.path.isfile(file_path):
+        print("The specified file does not exist.")
+        return
+
+    let7_species = {}
+
+    with open(file_path, 'r') as file:
+        current_species = ""
+        for line in file:
+            if line.startswith('>'):
+                header = line[1:].strip()
+                current_species = extract_species_code(header)
+            else:
+                let7_code = extract_let7_code(header)
+                if let7_code:
+                    let7_species.setdefault(current_species, {}).setdefault(let7_code, 0)
+                    let7_species[current_species][let7_code] += 1
+
+    # Filter species with frequency count less than 10
+    let7_species_filtered = {species: counts for species, counts in let7_species.items() if sum(counts.values()) >= 10}
+    species_list = list(let7_species_filtered.keys())
+    let7_codes = list(set().union(*[d.keys() for d in let7_species_filtered.values()]))
+
+    # Create a matrix to store the presence counts
+    presence_matrix = np.zeros((len(species_list), len(let7_codes)))
+
+    for i, species in enumerate(species_list):
+        for j, let7_code in enumerate(let7_codes):
+            presence_matrix[i, j] = let7_species_filtered[species].get(let7_code, 0)
+
+    # Set the positions of the bars on the x-axis
+    x = np.arange(len(species_list))
+    # Set the width of the bars
+    bar_width = 0.35
+    # Create the figure and axes
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    # Plot the stacked bars
+    bottom = np.zeros(len(species_list))
+    for i, let7_code in enumerate(let7_codes):
+        ax.bar(x, presence_matrix[:, i], bottom=bottom, label=let7_code)
+        bottom += presence_matrix[:, i]
+
+        # Add count labels for individual let-7 miRNAs
+        for j, species in enumerate(species_list):
+            count = presence_matrix[j, i]
+            if count > 0:
+                ax.text(x[j], bottom[j] - count / 2, str(int(count)), ha='center', va='center')
+
+    # Add labels and title
+    ax.set_xlabel('Species')
+    ax.set_ylabel('Presence Count')
+    ax.set_title('Presence of let-7 Family per Species (Frequency >= 15)')
+    ax.set_xticks(x)
+    ax.set_xticklabels(species_list, rotation=45, ha='right')
+
+    # Add a legend
+    ax.legend()
+
+    # Display the plot
+    plt.tight_layout()
+    plt.show()
+
+# File path
+file_path = r"C:\Users\wku\Advancedprogram\project\GC_calc-complexity-project\mature.fa"
+let7_family_presence(file_path)
+
 ## ![Figure_2](https://github.com/aberakenea/Home-take-exam-project/assets/130226484/17063864-7d72-453a-a2b3-a52f8a994cbf)
 ## Levenshtein Distance
 What is the average levenshtein distance for the let-7 miRNAs for each species?
@@ -467,8 +686,96 @@ Levenshtein distance between hsa-let-7i-3p MIMAT0004585 Homo sapiens let-7i-3p a
 
 #### Question 5: What is the levenshtein distance for each let-7 miRNA across all species?
 ## for example, let-7a is present in 121 species, what is the average Levenshtein distance among all pairs?
-## ANSWER:
-## I have done the code of levenshtein distance for let-7e miRNA across all species and get the following results:
+## ANSWER: 
+## the code for let-7e miRNA across all species is:
+import os
+
+from Levenshtein import distance
+
+def calculate_levenshtein_distance(file_path):
+
+    if not os.path.isfile(file_path):
+
+        print("The specified file does not exist.")
+
+        return
+
+    let7_sequences = []
+
+    total_let7_miRNA = 0
+
+    total_distance = 0
+
+    total_pairs = 0
+
+    with open(file_path, 'r') as file:
+
+        species = ""
+
+        sequence = ""
+
+        for line in file:
+
+            if line.startswith('>'):
+
+                header = line[1:].strip()
+
+                species = extract_species(header)
+
+                sequence = ""
+
+            else:
+
+                sequence = line.strip()
+
+            if 'let-7e' in header and species and sequence:
+
+
+                let7_sequences.append((species, sequence))
+
+
+                total_let7_miRNA += 1
+
+    for i in range(len(let7_sequences) - 1):
+
+        for j in range(i + 1, len(let7_sequences)):
+
+
+            species1, seq1 = let7_sequences[i]
+
+
+            species2, seq2 = let7_sequences[j]
+
+
+            levenshtein_distance = distance(seq1, seq2)
+
+            total_distance += levenshtein_distance
+
+            total_pairs += 1
+
+            print(f"Species: {species1} - {species2} | Levenshtein Distance: {levenshtein_distance}")
+
+
+    if total_pairs > 0:
+
+        average_distance = total_distance / total_pairs
+
+        print(f"Total 'let-7' miRNAs: {total_let7_miRNA}")
+
+        print(f"Average Levenshtein Distance of 'let-7' miRNAs: {average_distance:.2f}")
+
+def extract_species(header):
+
+    species = header.split(' ')[0]
+
+    return species
+
+# File path
+
+file_path = r"C:\Users\wku\Advancedprogram\project\GC_calc-complexity-project\mature.fa"
+
+calculate_levenshtein_distance(file_path)
+## I have done for code of levenshtein distance of let-7e miRNA across all species and get the following results:
 Species: cin-let-7e - pbv-let-7e-5p | Levenshtein Distance: 5
 Species: cin-let-7e - pbv-let-7e-3p | Levenshtein Distance: 15
 Species: cin-let-7e - chi-let-7e-5p | Levenshtein Distance: 4
@@ -1723,12 +2030,89 @@ Species: sbo-let-7e - oga-let-7e | Levenshtein Distance: 0
 Species: pha-let-7e - oga-let-7e | Levenshtein Distance: 0
 Total 'let-7e' miRNAs: 64
 Average Levenshtein Distance of 'let-7e' miRNAs: 7.68
+## the code for plot of let-7e miRNA across all species is the following:
+import os
+import Levenshtein
+import matplotlib.pyplot as plt
+
+def extract_let7_code(header):
+    if 'let-7' in header:
+        code = header.split('let-7')[1].strip()[0]
+        return f"let-7{code}"
+    return ""
+
+file_path = r"C:\Users\wku\Advancedprogram\project\GC_calc-complexity-project\mature.fa"
+if not os.path.isfile(file_path):
+    print("The specified file does not exist.")
+    exit()
+
+let7_sequences = {}
+let7_frequency = {}
+
+with open(file_path, 'r') as file:
+    let7_code = ""
+    sequence = ""
+    for line in file:
+        if line.startswith('>'):
+            header = line[1:].strip()
+            let7_code = extract_let7_code(header)
+            sequence = ""
+        else:
+            sequence = line.strip()
+
+        if let7_code and sequence:
+            let7_sequences.setdefault(let7_code, []).append(sequence)
+            let7_frequency[let7_code] = let7_frequency.get(let7_code, 0) + 1
+
+total_sequences_count = 0
+avg_distances = []
+frequencies = []
+miRNA_families = []
+
+for let7_code, sequences in let7_sequences.items():
+    total_distance = 0
+    total_pairs = 0
+
+    if len(sequences) < 2:
+        continue
+
+    for i in range(len(sequences) - 1):
+        for j in range(i + 1, len(sequences)):
+            total_distance += Levenshtein.distance(sequences[i], sequences[j])
+            total_pairs += 1
+
+    average_distance = total_distance / total_pairs
+    frequency = let7_frequency.get(let7_code, 0)
+    avg_distances.append(average_distance)
+    frequencies.append(frequency)
+    miRNA_families.append(let7_code)
+    print(f"The Average Levenshtein distance among all pairs for miRNA family {let7_code}: {average_distance:.2f}")
+    print(f"The frequency of miRNA family {let7_code}: {frequency}")
+    total_sequences_count += frequency
+
+print(f"Total sequences count: {total_sequences_count}")
+
+# Plotting
+x_pos = range(len(miRNA_families))
+fig, ax1 = plt.subplots()
+ax1.bar(x_pos, avg_distances, align='center', alpha=0.5)
+ax1.set_ylabel('Average Levenshtein Distance')
+ax1.set_title('Average Levenshtein Distance and Frequency for miRNA Families')
+
+ax2 = ax1.twinx()
+ax2.plot(x_pos, frequencies, 'r')
+ax2.set_ylabel('Frequency')
+
+plt.xticks(x_pos, miRNA_families)
+plt.xlabel('miRNA Family')
+
+plt.show()
 ## the matplot for let-7e miRNA across all species is the following:
 ![Figure_5](https://github.com/aberakenea/Home-take-exam-project/assets/130226484/cc1cd506-0956-4586-bca0-895629df91ca)
 
 #### task: repeat for all let-7 miRNAs and plot
 ## ANSWER:
-## NOTE: we can modify the above code of levensthein distance let-7e miRNAs and plot for all let-7 miRNAs and plot, but still I can not able to run code for all let-7 miRNAs and plots due to the shortage of my PCs RAM, Dear Profecer SIMON, you can run the code for all let_7 miRNAs and plots hope your computer do have enuogh storage.
+## NOTE: we can modify the above code of levensthein distance let-7e miRNAs and plot for all let-7 miRNAs and plot accros all species, but still I can not able to run code for all let-7 miRNAs and plots accros all species due to the shortage of my PCs RAM, Dear Profecer SIMON, you can run the code for all let_7 miRNAs and plots hope your computer do have enuogh storage.
 
 
 
