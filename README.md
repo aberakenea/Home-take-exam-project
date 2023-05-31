@@ -48,31 +48,7 @@ plt.show()  # Display the plot
 
 #### Question 2: how many **let-7** miRNAs are there in the current release of miRBase
 # ANSWERs:
-## the code for let-7 miRNA in the current release of miRBase and it`s path_file is as following:
-'''
-Created on May 15, 2023
 
-@author: ABERA KENEA
-'''
-file_path = r"C:\Users\wku\Advancedprogram\project\GC_calc-complexity-project\mature.fa"
-
-def count_let7_miRNAs(file_path):
-    let7_count = 0
-   
-    with open(file_path, "r") as file:
-        lines = file.readlines()
-       
-        for line in lines:
-            if line.startswith(">"):
-                miRNA_name = line.strip()[1:]
-               
-                if "let-7" in miRNA_name:
-                    let7_count += 1
-   
-    return let7_count
-
-let7_count = count_let7_miRNAs(file_path)
-print("Total number of let-7 miRNAs across all species:", let7_count)
 ##  it`s out put is Total number of let-7 miRNAs across all species: 740
 
 #### Question 3: what is the current version of miRBase?
